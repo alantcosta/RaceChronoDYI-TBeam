@@ -1,6 +1,3 @@
-//Library for AXP20x Power Management
-#include <axp20x.h>
-
 //Library for Bluetooth Low Energy
 #include <BLEDevice.h>
 #include <BLEUtils.h>
@@ -27,8 +24,6 @@ uint8_t rc_data[20];
 uint8_t gpsSyncBits = 0;
 
 int16_t msg_length;
-
-AXP20X_Class axp;
 
 HardwareSerial GPSSerial1(1);
 
@@ -361,37 +356,13 @@ void configBLE()
   BLEDevice::startAdvertising();
 }
 
-//AXP power management configuration
-void configAXP()
-{
-  Wire.begin(21, 22);
-  if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS))   
-  {
-    Serial.println("[I] AXP192 Begin PASS");
-  }
-  else  
-  {
-    Serial.println("[I] AXP192 Begin FAIL");
-  }
-  axp.setDCDC1Voltage(3300);            //ESP32 3v3
-  axp.setLDO3Voltage(3300);            //GPS   3v3
-  axp.setPowerOutPut(AXP192_DCDC1, AXP202_ON);  //ESP32 ON
-  axp.setPowerOutPut(AXP192_LDO3, AXP202_ON);    //GPS   ON
-  axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF);  //LORA
-  axp.setPowerOutPut(AXP192_EXTEN, AXP202_OFF);
-}
-
 //Setup UART/BLE/GPS/AXP
 void setup()
 {
   //ESP32 UART - 115200
   Serial.begin(115200);
   configBLE();
-  configAXP();
-  configGPS();
-
-  //LED blink fast when ready
-  axp.setChgLEDMode(AXP20X_LED_BLINK_4HZ);
+  configGPS();  
 }
 
 //U-blox read incoming messages
@@ -561,14 +532,12 @@ void loop()
   if (!deviceConnected && oldDeviceConnected)     
   {
     delay(500);
-    BLE_server->startAdvertising();
-    axp.setChgLEDMode(AXP20X_LED_BLINK_4HZ);
+    BLE_server->startAdvertising();    
     Serial.println("[I] Bluetooth device discoverable");
     oldDeviceConnected = deviceConnected; 
   }
   if (deviceConnected && !oldDeviceConnected)
-  {
-    axp.setChgLEDMode(AXP20X_LED_BLINK_1HZ);
+  {    
     oldDeviceConnected = deviceConnected;   
   }
 }
